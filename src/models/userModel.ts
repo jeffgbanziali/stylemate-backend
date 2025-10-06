@@ -4,11 +4,13 @@ export interface IUser extends Document {
   email?: string;
   phone?: string;
   password?: string;
-  name?: string;
+  username?: string;
+  dateOfBirth?: string;
   provider: "email" | "google" | "apple" | "phone";
-  providerId?: string; // pour Google / Apple
+  providerId?: string; 
   preferences: {
-    style: string;
+    style: string[];
+    color:string[];
   };
   measurements?: {
     height?: number;
@@ -26,15 +28,17 @@ const UserSchema: Schema = new Schema<IUser>(
     email: { type: String, unique: true, sparse: true },
     phone: { type: String, unique: true, sparse: true },
     password: { type: String },
-    name: { type: String },
+    username: { type: String },
+    dateOfBirth: { type: String, required: true },
     provider: {
       type: String,
       enum: ["email", "google", "apple", "phone"],
       required: true
     },
-    providerId: { type: String }, // id pour OAuth
+    providerId: { type: String }, 
     preferences: {
-      style: { type: String, default: "casual" }
+      style: { type: [String], default: []},
+      color :{ type: [String], default: [] },
     },
     measurements: {
       height: Number,

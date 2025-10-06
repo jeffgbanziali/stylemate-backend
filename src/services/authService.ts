@@ -7,7 +7,6 @@ import { getRedis } from "../config/redis";
 
 const JWT_SECRET = process.env.JWT_SECRET || "change_this_secret";
 
-// ---------------------- REDIS ----------------------
 
 
 // ---------------------- JWT ----------------------
@@ -20,7 +19,7 @@ const generateToken = (user: IUser) => {
 };
 
 // ---------------------- EMAIL ----------------------
-export const registerEmail = async (email: string, password: string, name?: string) => {
+export const registerEmail = async (email: string, password: string, username?: string) => {
   const existing = await User.findOne({ email });
   if (existing) throw new Error("Email déjà utilisé");
 
@@ -29,7 +28,7 @@ export const registerEmail = async (email: string, password: string, name?: stri
   const user = new User({
     email,
     password: hashedPassword,
-    name,
+    username,
     provider: "email"
   });
 
@@ -64,7 +63,7 @@ export const loginGoogle = async (idToken: string) => {
   if (!user) {
     user = new User({
       email: payload.email,
-      name: payload.name,
+      username: payload.name,
       provider: "google",
       providerId: payload.sub
     });
@@ -84,7 +83,7 @@ export const loginApple = async (identityToken: string) => {
     grant_type: "authorization_code"
   });
 
-  const payload = response.data.id_token; // ici simplifié, à parser JWT
+  const payload = response.data.id_token; 
   const email = payload?.email;
   const sub = payload?.sub;
 
@@ -94,7 +93,7 @@ export const loginApple = async (identityToken: string) => {
   if (!user) {
     user = new User({
       email,
-      name: payload?.name || "Apple User",
+      username: payload?.username || "Apple User",
       provider: "apple",
       providerId: sub
     });
@@ -106,7 +105,7 @@ export const loginApple = async (identityToken: string) => {
 
 // ---------------------- PHONE OTP ----------------------
 export const sendOTP = async (phone: string) => {
-  const redisClient = getRedis(); // 👈 Récupérez le client initialisé
+  const redisClient = getRedis(); 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   await redisClient.set(`otp:${phone}`, otp, { EX: 300 });
   console.log(`OTP pour ${phone}: ${otp}`);
@@ -114,7 +113,7 @@ export const sendOTP = async (phone: string) => {
 };
 
 export const verifyOTP = async (phone: string, otp: string) => {
-  const redisClient = getRedis(); // 👈 Récupérez le client initialisé
+  const redisClient = getRedis(); 
   const savedOTP = await redisClient.get(`otp:${phone}`);
   if (savedOTP !== otp) throw new Error("OTP invalide");
 
