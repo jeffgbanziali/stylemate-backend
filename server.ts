@@ -4,7 +4,7 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import { authenticateJWT, AuthRequest } from './src/middleware/authMiddleware';
-import authRoutes from './src/routes/userRoutes';
+import authRoutes from './src/routes/authRoutes';
 import { connectDB } from './src/config/db';
 import { initRedis } from './src/config/redis';
 
