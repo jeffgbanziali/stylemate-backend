@@ -4,8 +4,9 @@ import * as authController from "../controllers/authController";
 const router = Router();
 
 // Email
-router.post("/register", authController.registerEmail);
+router.post("/register/verify", authController.verifyAndRegister);
 router.post("/login", authController.loginEmail);
+router.post("/register/send-code", authController.sendVerificationCode);
 
 // Google
 router.post("/login/google", authController.loginGoogle);

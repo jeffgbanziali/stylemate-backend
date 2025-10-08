@@ -19,12 +19,14 @@ app.get("/api/profile", authenticateJWT, (req: AuthRequest, res) => {
   res.json({ user: req.user });
 });
 
+
+
 const startServer = async () => {
   try {
     await connectDB();
     await initRedis();
     
-    const PORT = process.env.PORT || 5000;
+    const PORT = process.env.PORT;
     app.listen(PORT, () => console.log(`🚀 Serveur lancé sur le port ${PORT}`));
   } catch (err) {
     console.error('❌ Erreur au démarrage du serveur:', err);
