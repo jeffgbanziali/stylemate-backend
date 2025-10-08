@@ -1,2 +1,47 @@
-/node_modules/
-config/.env
+# Fichiers d'environnement
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env*.local
+
+# Dépendances
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Logs
+logs/
+*.log
+
+# Fichiers de build
+dist/
+build/
+.next/
+out/
+
+# Fichiers IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Tests
+coverage/
+.nyc_output/
+
+# Données locales
+*.sqlite
+*.db
