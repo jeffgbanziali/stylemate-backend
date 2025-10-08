@@ -5,6 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import { authenticateJWT, AuthRequest } from './src/middleware/authMiddleware';
 import authRoutes from './src/routes/authRoutes';
+import userRoutes from './src/routes/userRoutes'
 import { connectDB } from './src/config/db';
 import { initRedis } from './src/config/redis';
 
@@ -14,8 +15,9 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/user',userRoutes);
 
-app.get("/api/profile", authenticateJWT, (req: AuthRequest, res) => {
+app.get("/api/session/profile", authenticateJWT, (req: AuthRequest, res) => {
   res.json({ user: req.user });
 });
 

@@ -16,36 +16,37 @@ export class UserController {
    * Récupérer le profil de l'utilisateur connecté
    * GET /api/user/profile
    */
-  static async getProfile(req: AuthRequest, res: Response): Promise<Response> {
+  static async getProfile(req: Request, res: Response): Promise<Response> {
     try {
-      const userId = req.user?.id;
+        const userId = req.params.id; // Correction ici : 'id' pas '_id'
+        console.log("mon id", userId);
 
-      if (!userId) {
-        return res.status(401).json({
-          success: false,
-          message: "Non authentifié",
+       /* if (!userId) {
+        return res.status(400).json({
+            success: false,
+            message: "ID utilisateur manquant",
         });
-      }
+        }*/
 
-      const user = await User.findById(userId).select("-password");
-      
-      if (!user) {
+        const user = await User.findById(userId).select("-password");
+        
+        if (!user) {
         return res.status(404).json({
-          success: false,
-          message: "Utilisateur non trouvé",
+            success: false,
+            message: "Utilisateur non trouvé",
         });
-      }
+        }
 
-      return res.json({
+        return res.json({
         success: true,
         data: user,
-      });
+        });
     } catch (error) {
-      return res.status(500).json({
+        return res.status(500).json({
         success: false,
         message: "Erreur lors de la récupération du profil",
         error: error instanceof Error ? error.message : "Erreur inconnue",
-      });
+        });
     }
   }
 

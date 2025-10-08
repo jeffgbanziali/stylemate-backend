@@ -1,11 +1,11 @@
 import express from "express";
 import { UserController } from "../controllers/userController";
-import { authenticateJWT } from "../middleware/authMiddleware";
+//import { authenticateJWT } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
 // Toutes les routes nécessitent une authentification
-router.use(authenticateJWT);
+//router.use(authenticateJWT);
 
 // ==================== PROFIL ====================
 /**
@@ -13,7 +13,7 @@ router.use(authenticateJWT);
  * @desc    Récupérer le profil de l'utilisateur connecté
  * @access  Private
  */
-router.get("/profile", UserController.getProfile);
+router.get("/profile/:id", UserController.getProfile);
 
 /**
  * @route   PUT /api/user/profile
