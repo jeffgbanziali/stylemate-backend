@@ -7,6 +7,10 @@ export const sendVerificationCode = async (req: Request, res: Response) => {
   try {
     const { email, password, username, dateOfBirth } = req.body;
 
+    if (!email || !password || !username || !dateOfBirth) {
+      return res.status(400).json({ error: "Tous les champs sont requis." });
+    }
+
     // Génère un code à 6 chiffres
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
@@ -23,11 +27,14 @@ export const sendVerificationCode = async (req: Request, res: Response) => {
     });
 
     // Envoi du mail
-    await sendVerificationEmail(username, verificationCode);
+    await sendVerificationEmail(email, verificationCode);
 
-    res.status(200).json({ message: "Code de vérification envoyé à ton email." });
+    res.status(200).json({
+      message: "Code de vérification envoyé à ton email.",
+      email,
+    });
   } catch (err: any) {
-    console.error(err);
+    console.error("Erreur sendVerificationCode:", err);
     res.status(400).json({ error: err.message });
   }
 };
@@ -37,25 +44,26 @@ export const verifyAndRegister = async (req: Request, res: Response) => {
     const { email, code } = req.body;
 
     const verification = await Verification.findOne({ email });
+
     if (!verification) {
       return res.status(400).json({ error: "Aucune demande de vérification trouvée." });
     }
 
-
     if (String(verification.verificationCode) !== String(code)) {
-      console.log("log",verification)
-      console.log("log code",code)
-
+      console.log("log", verification);
+      console.log("log code", code);
       return res.status(400).json({ error: "Code de vérification invalide." });
     }
 
     if (!verification.password || !verification.username) {
       return res.status(400).json({ error: "Informations de vérification manquantes." });
     }
+
     const token = await authService.registerEmail(
       verification.email,
       verification.password,
-      verification.username
+      verification.username,
+      verification.dateOfBirth
     );
 
     await verification.deleteOne();
@@ -65,6 +73,7 @@ export const verifyAndRegister = async (req: Request, res: Response) => {
     res.status(400).json({ error: err.message });
   }
 };
+
 
 
 /*export const registerEmail = async (req: Request, res: Response) => {

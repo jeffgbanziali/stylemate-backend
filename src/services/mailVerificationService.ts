@@ -23,9 +23,10 @@ export const sendVerificationEmail = async (
 
     const response = await resend.emails.send({
       from: 'onboarding@resend.dev',
-      to: "gbaialij@gmail.com", 
+      to: "gbazialij@gmail.com",
       subject: '🔐 Code de vérification pour votre compte Flajoo',
       html: htmlContent,
+
    /*   attachments: [
         {
           path: filePath,

@@ -8,7 +8,6 @@ export interface IUser extends Document {
   dateOfBirth?: string;
   provider: "email" | "google" | "apple" | "phone";
   providerId?: string; 
-  verificationCode: number;
   preferences: {
     style: string[];
     color:string[];
@@ -31,7 +30,6 @@ const UserSchema: Schema = new Schema<IUser>(
     password: { type: String },
     username: { type: String },
     dateOfBirth: { type: String, required: true },
-    verificationCode :{type : Number, required:true},
     provider: {
       type: String,
       enum: ["email", "google", "apple", "phone"],

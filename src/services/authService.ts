@@ -19,7 +19,7 @@ const generateToken = (user: IUser) => {
 };
 
 // ---------------------- EMAIL ----------------------
-export const registerEmail = async (email: string, password: string, username?: string) => {
+export const registerEmail = async (email: string, password: string, username?: string, dateOfBirth?: string) => {
   const existing = await User.findOne({ email });
   if (existing) throw new Error("Email déjà utilisé");
 
@@ -29,6 +29,7 @@ export const registerEmail = async (email: string, password: string, username?: 
     email,
     password: hashedPassword,
     username,
+    dateOfBirth,
     provider: "email"
   });
 
