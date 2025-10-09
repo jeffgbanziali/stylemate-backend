@@ -6,6 +6,8 @@ import cors from 'cors';
 import { authenticateJWT, AuthRequest } from './src/middleware/authMiddleware';
 import authRoutes from './src/routes/authRoutes';
 import userRoutes from './src/routes/userRoutes'
+import wardrobeRoutes from "./src/routes/wardrobeRoutes";
+
 import { connectDB } from './src/config/db';
 import { initRedis } from './src/config/redis';
 
@@ -16,6 +18,8 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/user',userRoutes);
+app.use("/api/wardrobe", wardrobeRoutes);
+
 
 app.get("/api/session/profile", authenticateJWT, (req: AuthRequest, res) => {
   res.json({ user: req.user });

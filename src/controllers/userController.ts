@@ -49,6 +49,42 @@ export class UserController {
         });
     }
   }
+  
+  static async getMyProfile(req: AuthRequest, res: Response): Promise<Response> {
+    try {
+      const userId = req.user?.id; 
+      console.log("🧠 ID utilisateur connecté:", userId);
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: "Non authentifié",
+        });
+      }
+
+      const user = await User.findById(userId).select("-password");
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "Utilisateur non trouvé",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: user,
+      });
+    } catch (error) {
+      console.error("❌ Erreur getMyProfile:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Erreur lors de la récupération du profil",
+        error: error instanceof Error ? error.message : "Erreur inconnue",
+      });
+    }
+  }
+
 
   /**
    * Mettre à jour les informations de base

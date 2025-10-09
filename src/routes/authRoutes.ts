@@ -5,7 +5,7 @@ const router = Router();
 
 // Email
 router.post("/register/verify", authController.verifyAndRegister);
-router.post("/login", authController.loginEmail);
+router.get("/login", authController.loginEmail);
 router.post("/register/send-code", authController.sendVerificationCode);
 
 // Google

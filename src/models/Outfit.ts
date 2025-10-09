@@ -35,7 +35,8 @@ const OutfitSchema: Schema = new Schema<IOutfit>({
     confidence: { type: Number }
   },
   previewGlb: { type: String },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { timestamps: true }
+
 });
 
 export default mongoose.model<IOutfit>("Outfit", OutfitSchema);
