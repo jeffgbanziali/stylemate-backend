@@ -1,0 +1,39 @@
+# Ouvre le fichier .gitignore et ajoute à la fin :
+cat >> .gitignore << 'EOF'
+
+# ========================================
+# DATASETS & TRAINING DATA (CRITIQUE!)
+# ========================================
+src/AItraining/datasets/
+datasets/
+data/
+*.csv
+*.json
+!package.json
+!tsconfig.json
+!.eslintrc.json
+*.parquet
+*.arrow
+*.feather
+*.h5
+*.hdf5
+
+# Modèles ML
+*.pkl
+*.pickle
+*.pt
+*.pth
+*.onnx
+*.pb
+*.tflite
+*.mlmodel
+
+# Images de training
+training_images/
+scraped_images/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+EOF
