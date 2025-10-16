@@ -17,113 +17,105 @@ type LeanUser = {
   };
 };
 
-async function assignWardrobeToNewUsers(): Promise<void> {
+async function assignNewWardrobesToExistingUsers(): Promise<void> {
   await mongoose.connect(MONGO_URI);
   console.log("✅ Connecté à MongoDB");
 
-  const usersWithoutWardrobe = await UserForTraining.aggregate<LeanUser>([
-    {
-      $lookup: {
-        from: "wardrobeitemfortrainings",
-        localField: "_id",
-        foreignField: "user",
-        as: "wardrobe",
-      },
-    },
-    { $match: { "wardrobe.0": { $exists: false } } },
-    { $project: { _id: 1, preferences: 1, gender: 1 } },
-  ]);
-
-  if (usersWithoutWardrobe.length === 0) {
-    console.log("⚠️ Aucun nouvel utilisateur sans wardrobe trouvé.");
+  // 🔹 1. Récupérer les utilisateurs existants
+  const existingUsers = await UserForTraining.find({}, { _id: 1, preferences: 1 }).lean<LeanUser[]>();
+  if (existingUsers.length === 0) {
+    console.log("⚠️ Aucun utilisateur existant trouvé.");
     await mongoose.disconnect();
     return;
   }
 
+  // 🔹 2. Récupérer les vêtements orphelins (non assignés)
   const unassignedItems = await WardrobeItemForTraining.find({
     $or: [{ user: { $exists: false } }, { user: null }],
   }).lean();
 
-  console.log(
-    `👤 ${usersWithoutWardrobe.length} nouveaux utilisateurs, 👕 ${unassignedItems.length} vêtements à répartir`
-  );
-
   if (unassignedItems.length === 0) {
-    console.log("⚠️ Aucun vêtement orphelin à distribuer. Rien à faire.");
+    console.log("✅ Aucun vêtement orphelin trouvé. Rien à faire.");
     await mongoose.disconnect();
     return;
   }
 
-  const userIds = usersWithoutWardrobe.map((u) => u._id.toString());
-  const userPrefs = new Map(
-    usersWithoutWardrobe.map((u) => [u._id.toString(), u.preferences || {}])
+  console.log(
+    `👕 ${unassignedItems.length} vêtements orphelins à répartir entre ${existingUsers.length} utilisateurs.`
   );
 
-  const baseCap = Math.max(1, Math.floor(unassignedItems.length / usersWithoutWardrobe.length));
-  const userCount: Record<string, number> = Object.create(null);
-  for (const id of userIds) userCount[id] = 0;
+  // 🔹 3. Préparer des structures utiles
+  const userIds = existingUsers.map((u) => u._id.toString());
+  const userPrefs = new Map(existingUsers.map((u) => [u._id.toString(), u.preferences || {}]));
+  const userLoad: Record<string, number> = Object.fromEntries(userIds.map((id) => [id, 0]));
   let cursor = 0;
 
+  // 🔹 4. Fonction de sélection d’un utilisateur compatible
   const pickUserForItem = (item: any): string => {
     for (let pass = 0; pass < 2; pass++) {
-      for (let k = 0; k < userIds.length; k++) {
-        const idx = (cursor + k) % userIds.length;
+      for (let i = 0; i < userIds.length; i++) {
+        const idx = (cursor + i) % userIds.length;
         const uid = userIds[idx];
-        const cnt = userCount[uid] || 0;
-        if (cnt >= baseCap && pass === 0) continue;
-
         const prefs = userPrefs.get(uid) || {};
 
-        const styleMatch =
-          (prefs.style || []).some((s: string) => (item.styleTags || []).includes(s));
-        const colorMatch =
-          (prefs.color || []).some((c: string) => (item.color || "").toLowerCase().includes(c.toLowerCase()));
-        const seasonMatch =
-          (prefs.season || []).includes(item.season);
-        const occasionMatch =
-          (prefs.occasion || []).some((o: string) => (item.occasion || []).includes(o));
-        const genderMatch =
-          !prefs.gender || prefs.gender === item.gender;
-        const brandMatch =
-          (prefs.brand || []).includes(item.brand);
+        const styleMatch = (prefs.style || []).some((s) =>
+          (item.styleTags || []).includes(s)
+        );
+        const colorMatch = (prefs.color || []).some((c) =>
+          (item.color || "").toLowerCase().includes(c.toLowerCase())
+        );
+        const seasonMatch = (prefs.season || []).includes(item.season);
+        const occasionMatch = (prefs.occasion || []).some((o) =>
+          (item.occasion || []).includes(o)
+        );
+        const genderMatch = !prefs.gender || prefs.gender === item.gender;
+        const brandMatch = (prefs.brand || []).includes(item.brand);
 
         if (
-          (pass === 1 || cnt < baseCap) &&
-          (styleMatch || colorMatch || seasonMatch || occasionMatch || genderMatch || brandMatch)
+          styleMatch ||
+          colorMatch ||
+          seasonMatch ||
+          occasionMatch ||
+          genderMatch ||
+          brandMatch
         ) {
-          userCount[uid] = cnt + 1;
+          userLoad[uid]++;
           cursor = (idx + 1) % userIds.length;
           return uid;
         }
       }
     }
+
+    // fallback → utilisateur suivant
     const uid = userIds[cursor];
-    userCount[uid] = (userCount[uid] || 0) + 1;
+    userLoad[uid]++;
     cursor = (cursor + 1) % userIds.length;
     return uid;
   };
 
+  // 🔹 5. Assignation en batch
   const BATCH = 500;
   for (let i = 0; i < unassignedItems.length; i += BATCH) {
     const batch = unassignedItems.slice(i, i + BATCH);
-    const ops = batch.map((it) => {
-      const uid = pickUserForItem(it);
+    const ops = batch.map((item) => {
+      const uid = pickUserForItem(item);
       return {
         updateOne: {
-          filter: { _id: it._id },
+          filter: { _id: item._id },
           update: { $set: { user: new Types.ObjectId(uid) } },
         },
       };
     });
+
     await WardrobeItemForTraining.bulkWrite(ops, { ordered: false });
     console.log(`✅ ${Math.min(i + BATCH, unassignedItems.length)}/${unassignedItems.length} vêtements assignés`);
   }
 
+  console.log("🏁 Assignation terminée avec succès !");
   await mongoose.disconnect();
-  console.log("🏁 Assignation terminée !");
 }
 
-assignWardrobeToNewUsers().catch((err) => {
+assignNewWardrobesToExistingUsers().catch((err) => {
   console.error("❌ Erreur:", err);
   process.exit(1);
 });

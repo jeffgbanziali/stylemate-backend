@@ -21,7 +21,10 @@
     "build:trainingdata": "ts-node src/AItraining/scripts/buildTrainingDataset.ts",
     "import:kaggle": "ts-node src/AItraining/scripts/ingestKaggleFashionDataset.ts",
     "pipeline:full": "npm run seed:users && npm run scrape:zara && npm run scrape:hm && npm run scrape:bershka && npm run scrape:kiabi && npm run scrape:shein && npm run assign:wardrobes && npm run build:dataset",
-    "pipeline:fast": "npm run assign:wardrobes && npm run build:dataset"
+    "pipeline:fast": "npm run assign:wardrobes && npm run build:dataset",
+    "clean:data": "ts-node src/AItraining/scripts/clean_and_categorize_data.ts",
+    "ingest:csv": "ts-node src/AItraining/scripts/ingest_csv_to_wardrobe.ts",
+    "verify:csv": "ts-node src/AItraining/scripts/fix_remaining_issues.ts"
   },
   "keywords": [],
   "author": "",

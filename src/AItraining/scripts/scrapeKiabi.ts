@@ -1,53 +1,69 @@
-import { chromium } from "playwright";
 import mongoose from "mongoose";
-import WardrobeItemForTraining from "../models/WardrobeItemForTraining";
+import axios from "axios";
+import fs from "fs";
+import WardrobeItem from "../models/WardrobeItemForTraining";
 
 const MONGO_URI = "mongodb://root:example@localhost:27017/stylemate_training?authSource=admin";
 
-const KIABICATEGORIES = [
-  { url: "https://www.kiabi.com/homme_tshirts-np519706", category: "top" },
-  { url: "https://www.kiabi.com/homme_pantalons-np519699", category: "bottom" },
-  { url: "https://www.kiabi.com/homme_chaussures-np520040", category: "shoes" },
-  { url: "https://www.kiabi.com/homme_accessoires-np520052", category: "accessory" },
-];
-
-async function scrapeKiabi() {
-  await mongoose.connect(MONGO_URI);
-  const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
-
-  for (const { url, category } of KIABICATEGORIES) {
-    console.log(`👕 Scraping Kiabi: ${category}`);
-    await page.goto(url, { waitUntil: "domcontentloaded" });
-
-    const products = await page.$$eval(".product-item", (items, category) =>
-      items.map((el) => {
-        const name = el.querySelector(".product-item__name")?.textContent?.trim();
-        const imageUrl = el.querySelector("img")?.src;
-        return {
-          name,
-          category,
-          color: "unspecified",
-          imageUrl,
-          styleTags: ["casual"],
-          material: "cotton",
-          season: "all",
-          occasion: ["daily"],
-          source: "kiabi",
-        };
-      }),
-      category
-    );
-
-    if (products.length) {
-      await WardrobeItemForTraining.insertMany(products);
-      console.log(`✅ ${products.length} ${category} ajoutés`);
-    }
+async function testUrl(url: string): Promise<string> {
+  try {
+    const res = await axios.head(url, { timeout: 8000 });
+    if (res.status === 200) return "ok";
+    return `${res.status}`;
+  } catch (err: any) {
+    if (err.code === "ECONNABORTED") return "timeout";
+    if (err.response && err.response.status) return `${err.response.status}`;
+    return "error";
   }
-
-  await browser.close();
-  await mongoose.disconnect();
-  console.log("🏁 Scraping Kiabi terminé.");
 }
 
-scrapeKiabi();
+async function run() {
+  await mongoose.connect(MONGO_URI);
+  console.log("✅ Connecté à MongoDB");
+
+  const items = await WardrobeItem.find({
+    $or: [
+      { embedding: { $exists: false } },
+      { embedding: [] },
+      { embedding: null }
+    ]
+  })
+    .select("name imageUrl brand category")
+    //.limit(200);
+
+  console.log(`🔍 Vérification des images (${items.length})...`);
+
+  const results: any[] = [];
+  for (const item of items) {
+    const status = await testUrl(item.imageUrl);
+    results.push({
+      name: item.name,
+      url: item.imageUrl,
+      status
+    });
+  }
+
+  const ok = results.filter(r => r.status === "ok");
+  const broken = results.filter(r => r.status !== "ok");
+
+  console.log(`
+=== RÉSULTATS ===
+        ok: ${ok.length}
+      403: ${broken.filter(b => b.status === "403").length}
+      404: ${broken.filter(b => b.status === "404").length}
+   timeout: ${broken.filter(b => b.status === "timeout").length}
+     other: ${broken.filter(b => !["ok","403","404","timeout"].includes(b.status)).length}
+  `);
+
+  fs.writeFileSync(
+    "src/AItraining/reports/image_check_report.json",
+    JSON.stringify(results, null, 2)
+  );
+
+  console.log("📄 Rapport enregistré → src/AItraining/reports/image_check_report.json");
+
+  await mongoose.disconnect();
+  console.log("🏁 Terminé !");
+}
+
+run();
