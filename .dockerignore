@@ -1,0 +1,37 @@
+# Ignorer Git
+.git
+.gitignore
+
+# Node modules
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Logs et caches
+*.log
+.cache
+.tmp
+
+# Dossiers de build
+dist
+build
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Environnements
+.env
+.env.*
+
+# Fichiers Python / IA (si présents)
+__pycache__/
+*.pyc
+*.pkl
+*.h5
+
+# Dossiers volumineux ou inutiles
+uploads
+screenshots
+docs
+tests

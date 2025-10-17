@@ -3,15 +3,6 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 export interface IWardrobeItem extends Document {
   user: Types.ObjectId;
   name: string;
-<<<<<<< HEAD
-  category: string;      
-  color?: string;
-  imageUrl: string;   
-  styleTags?: string[];
-  season?: "summer" | "winter" | "spring" | "autumn";
-  material?: string;
-  occasion?: string[]; // travail, sport, soirée...
-=======
   category: string;           // ex: top, bottom, shoes, accessory, bag, outerwear
   subCategory?: string;       // ex: "t-shirt", "jeans", "sneakers", "scarf"
   color?: string;
@@ -33,24 +24,18 @@ export interface IWardrobeItem extends Document {
   isFavorite?: boolean;
   usageCount?: number;        // combien de fois porté
   lastWornDate?: Date;
->>>>>>> 092df58 (feat: add complete Zara dataset with 20K+ products and training pipeline)
   createdAt: Date;
 }
 
 const WardrobeItemSchema: Schema = new Schema<IWardrobeItem>({
   user: { type: Schema.Types.ObjectId, ref: "User", required: true },
   name: { type: String, required: true },
-<<<<<<< HEAD
-=======
 
->>>>>>> 092df58 (feat: add complete Zara dataset with 20K+ products and training pipeline)
   category: {
     type: String,
     enum: ["top", "bottom", "shoes", "accessory", "bag", "outerwear"],
     required: true
   },
-<<<<<<< HEAD
-=======
 
   subCategory: {
     type: String,
@@ -69,7 +54,6 @@ const WardrobeItemSchema: Schema = new Schema<IWardrobeItem>({
     required: false
   },
 
->>>>>>> 092df58 (feat: add complete Zara dataset with 20K+ products and training pipeline)
   color: { type: String },
   pattern: { type: String },
   material: { type: String },
@@ -78,13 +62,8 @@ const WardrobeItemSchema: Schema = new Schema<IWardrobeItem>({
 
   imageUrl: { type: String, required: true },
   styleTags: { type: [String], default: [] },
-<<<<<<< HEAD
-  season : {type: String, enum: ["summer" , "winter" , "spring" , "autumn"]},
-  material:{type:String},
-  occasion:{type: [String]},
-=======
-  gender: { type: String, enum: ["male", "female", "unisex"], default: "unisex" },
 
+  gender: { type: String, enum: ["male", "female", "unisex"], default: "unisex" },
   season: { type: String, enum: ["summer", "winter", "spring", "autumn", "all"], default: "all" },
   occasion: { type: [String], default: [] },
 
@@ -100,7 +79,6 @@ const WardrobeItemSchema: Schema = new Schema<IWardrobeItem>({
   usageCount: { type: Number, default: 0 },
   lastWornDate: { type: Date },
 
->>>>>>> 092df58 (feat: add complete Zara dataset with 20K+ products and training pipeline)
   createdAt: { type: Date, default: Date.now }
 });
 

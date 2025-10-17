@@ -15,6 +15,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - stylemate-network   # 🧩 ajouté pour cohérence réseau
 
   redis:
     image: redis:7
@@ -26,6 +28,24 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - stylemate-network   # 🧩 ajouté
+
+  ai:
+    build:
+      context: "C:/Users/gbazi/OneDrive/Documents/StyleMate_Project/stylemate-ai"
+      dockerfile: Dockerfile
+    container_name: stylemate-ai
+    restart: always
+    ports:
+      - "8001:8001"
+    volumes:
+      - C:/Users/gbazi/OneDrive/Documents/StyleMate_Project/stylemate-ai/models_enhanced_outfits:/app/models_enhanced_outfits
+    depends_on:
+      mongo:
+        condition: service_healthy   # 🧠 utile si ton IA lit la base de training Mongo
+    networks:
+      - stylemate-network
 
   backend:
     build: .
@@ -39,6 +59,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      ai:
+        condition: service_started   # ✅ attend que le service IA soit prêt
+    networks:
+      - stylemate-network
 
 volumes:
   mongo-data:
+
+networks:
+  stylemate-network:
+    driver: bridge
